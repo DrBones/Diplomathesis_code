@@ -4,13 +4,13 @@ function simpletransport
 % starting at l = 1, there is no 0th element in matlab, this does not
 % matter as everything will simply be shifted by +1.
 
-t=1 ; % value of "t" does not matter, it will cancel itself out, why ????
+t=1.2 ; % value of t does only matter if nonzero confinement potential is used
 size_M=2;
 size_L=6; 
 lambda_f=10;
 B=0;
-Vl(1:size_L)=zeros(1,6);
-
+Vl=[-1:-1:-size_L];
+%Vl =  zeros(1,6) %bad case, physics or math problem ?
 %initialize Cl_1_2 vector of matrices
 Cl_1 = eye(size_M);
 Cl_2 = zeros(size_M);
@@ -20,22 +20,17 @@ L_minus = zeros(size_M);
 l=1;
 Ef_scalar = calculate_Ef(lambda_f,t);
 [Hl_lmin1,Hl_lplus1]=build_Hl_lmin1_lplus1(B,t,size_M);
-Tell=Tl(l,Vl,t,Ef_scalar,size_M,Hl_lmin1,Hl_lplus1)
-%[U_plus, U_minus, lambda_plus, lambda_minus] = get_U_lambda(Tl,size_M)
-%T_zero=build_T_zero(U_plus, U_minus, lambda_plus, lambda_minus,size_M)
-[T_zero, lambda] = build_T_zero(Tell,size_M)
+Tnull=Tl(l,Vl,t,Ef_scalar,size_M,Hl_lmin1,Hl_lplus1)
+[T_zero, lambda] = build_T_zero(Tnull,size_M)
 %Pl = build_Pl(Tl,Cl_1, Cl_2,size_M);
 
-%T = T_zero\Tl*Tl*T_zero*[L_plus; L_minus]
 TN = 1;
-
  for(j= 1:size_L)
-     TN=Tl(l,Vl,t,Ef_scalar,size_M,Hl_lmin1,Hl_lplus1)*TN
+     TN=Tl(l,Vl,t,Ef_scalar,size_M,Hl_lmin1,Hl_lplus1)*TN;
      l= l+1;
-     
  end
  
- T = T_zero/TN*T_zero
+ T = T_zero\TN*T_zero
 end
 
 function Hl=build_Hl(l,Vl,t,size_M)
@@ -50,7 +45,6 @@ function Hl=build_Hl(l,Vl,t,size_M)
         end
     end
 end
-
 
 function [Hl_lmin1,Hl_lplus1]=build_Hl_lmin1_lplus1(B,t,size_M)
     Hl_lmin1=zeros(size_M,size_M);
@@ -97,27 +91,3 @@ function [Pl] = build_Pl(Tl,Cl_1, Cl_2,size_M)
     Pl(size_M+1:2*size_M,1:size_M)     = Pl_1;
     Pl(size_M+1:2*size_M,size_M+1:2*size_M) = Pl_2;
 end
-
-%function [U_plus, U_minus, lambda_plus, lambda_minus] = get_U_lambda(Tl,size_M)
-    %solves eigenvalue equation to generate eigenvectors u_m(+-), + is assumed to be the
-    %first half of eigenvectors and - the second. The eigenvalues are
-    %labeled analogously.
-    %[V, D] = eig(Tl);
-    %if(size(V) == 2*size_M)
-    %    U_plus  = V(1:size_M,1:size_M);
-    %    %U_minus = V(size_M+1:2*size_M,size_M+1:2*size_M);
-    %    U_minus = V(1:size_M,size_M+1:2*size_M);
-    %    lambda_plus = D(1:size_M,1:size_M);
-    %    lambda_minus = D(size_M+1:2*size_M,size_M+1:2*size_M);
-    %else
-    %   disp('Eigenvalue Matrix dimension mismatch, nequal size_M');
-    %end
-%end
-
-%function [T_zero] = build_T_zero(U_plus, U_minus, lambda_plus, lambda_minus,size_M)
-     %builds T_zero from matrices U(+-) and lambda(+-)
-     %T_zero(1:size_M,1:size_M) = U_plus;
-     %T_zero(1:size_M,size_M+1:2*size_M) = U_minus;
-     %T_zero(size_M+1:2*size_M,1:size_M) = U_plus*lambda_plus;
-     %T_zero(size_M+1:2*size_M,size_M+1:2*size_M) = U_minus*lambda_minus;
-%end
